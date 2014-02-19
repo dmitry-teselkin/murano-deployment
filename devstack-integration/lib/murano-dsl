@@ -1,0 +1,105 @@
+# lib/murano
+
+# Dependencies:
+# ``functions`` file
+# ``DEST``, ``DATA_DIR``, ``STACK_USER`` must be defined
+
+# ``stack.sh`` calls the entry points in this order:
+#
+# install_murano
+# configure_murano
+# start_murano
+# stop_murano
+
+
+# Save trace setting
+XTRACE=$(set +o | grep xtrace)
+set -o xtrace
+
+
+
+# Defaults
+# --------
+
+# Set up default repos
+#---------------------
+
+MURANO_DSL_REPO=${MURANO_DSL_REPO:-${GIT_BASE}/istalker2/MuranoDsl.git}
+MURANO_DSL_BRANCH=${MURANO_DSL_BRANCH:-$MURANO_BRANCH}
+
+#---------------------
+
+
+# Murano dirs and config files
+#-----------------------------
+
+MURANO_DSL_DIR=$DEST/MuranoDsl
+MURANO_DSL_BIN_DIR=$MURANO_DSL_DIR/bin
+MURANO_DSL_CONF=$MURANO_CONF_DIR/murano-dsl.conf
+
+#-----------------------------
+
+# Endpoints
+#----------
+
+MURANO_DSL_HOST=${MURANO_DSL_HOST:-'localhost'}
+MURANO_DSL_PORT=${MURANO_DSL_PORT:-8082}
+
+#----------
+
+
+function install_murano_dsl() {
+    git_clone $MURANO_DSL_REPO $MURANO_DSL_DIR $MURANO_DSL_BRANCH
+
+    install_pip_requirements "$MURANO_DSL_DIR" ""
+
+    setup_develop $MURANO_DSL_DIR
+}
+
+
+function configure_murano_dsl() {
+
+    # Murano Conductor Configuration
+    #-------------------------------
+    echo_summary "Configuring file '$MURANO_DSL_CONF'"
+
+    iniset "$MURANO_DSL_CONF" 'DEFAULT' 'debug' "$(trueorfalse False $MURANO_DEBUG)"
+    iniset "$MURANO_DSL_CONF" 'DEFAULT' 'verbose' "$(trueorfalse False $MURANO_VERBOSE)"
+
+    iniset "$MURANO_DSL_CONF" 'DEFAULT' 'log_file' "$MURANO_LOG_DIR/murano-dsl.log"
+    #iniset "$MURANO_DSL_CONF" 'DEFAULT' 'data_dir' "$MURANO_DSL_CACHE"
+
+    iniset "$MURANO_DSL_CONF" 'keystone' 'auth_url' "$MURANO_AUTH_URL"
+
+    iniset "$MURANO_DSL_CONF" 'rabbitmq' 'host' "$MURANO_RABBIT_HOST"
+    iniset "$MURANO_DSL_CONF" 'rabbitmq' 'port' "$MURANO_RABBIT_PORT"
+    iniset "$MURANO_DSL_CONF" 'rabbitmq' 'login' "$MURANO_RABBIT_LOGIN"
+    iniset "$MURANO_DSL_CONF" 'rabbitmq' 'password' "$MURANO_RABBIT_PASSWORD"
+    iniset "$MURANO_DSL_CONF" 'rabbitmq' 'virtual_host' "$MURANO_RABBIT_VHOST"
+
+    iniset "$MURANO_DSL_CONF" 'rabbitmq' 'ssl' "False"
+    #-------------------------------
+
+}
+
+
+function start_murano_dsl() {
+    screen_it murano-dsl "cd $MURANO_DSL_DIR; python muranoapi/cmd/api.py --config-file $MURANO_CONF_DIR/murano-dsl.conf"
+}
+
+
+function stop_murano_dsl() {
+    # Kill the Murano screen windows
+    screen -S $SCREEN_NAME -p murano-dsl -X kill
+}
+
+# --------
+
+
+# Restore xtrace
+$XTRACE
+
+# Local variables:
+# mode: shell-script
+# End:
+
