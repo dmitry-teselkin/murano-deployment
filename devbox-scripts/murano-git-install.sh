@@ -12,7 +12,7 @@ murano_services='murano-api murano-conductor murano-repository'
 
 murano_config_files='/etc/murano/murano-api.conf
  /etc/murano/murano-api-paste.ini
- /etc/murano/murano-conductor.conf
+ /etc/murano/conductor.conf
  /etc/murano/conductor-paste.ini
  /etc/murano/murano-repository.conf
  /etc/murano/init-scripts/init.ps1
@@ -22,8 +22,6 @@ murano_config_files='/etc/murano/murano-api.conf
 
 git_prefix="https://github.com/stackforge"
 git_clone_root='/opt/git'
-
-pip_version_requirements='/etc/murano-deployment/pip_version.txt'
 
 os_version=''
 
@@ -132,36 +130,6 @@ function get_distro_name()
     echo "$dist_name"
 }
 
-function pip_install() {
-    log "--> pip_install($@)"
-
-    log "** Installing pip packages '$@'"
-
-    if [ -f "$pip_version_requirements" ]; then
-        pip install --upgrade -r "$pip_version_requirements" "$@"
-    else
-        pip install --upgrade "$@"
-    fi
-
-    log "<-- pip_install()"
-}
-
-function upgrade_pip() {
-    log "--> upgrade_pip($@)"
-
-    log "** Upgrading pip to '$1'"
-
-    case "$1" in
-        '1.4')
-            echo 'pip<1.5' > "$pip_version_requirements"
-            pip install --upgrade -r "$pip_version_requirements"
-            rm /usr/bin/pip
-            ln -s /usr/local/bin/pip /usr/bin/pip
-        ;;
-    esac
-
-    log "<-- upgrade_pip()"
-}
 #-------------------------------------------------
 
 
@@ -180,7 +148,10 @@ function install_prerequisites {
             log "** Updating system ..."
             yum update -y
 
-            upgrade_pip '1.4'
+            log "** Upgrading pip ..."
+            pip install --upgrade pip
+            #rm /usr/bin/pip
+            #ln -s /usr/local/bin/pip /usr/bin/pip
 
             log "** Installing OpenStack dashboard ..."
             yum install make gcc memcached httpd python-memcached mod_wsgi openstack-dashboard python-netaddr.noarch --assumeyes
@@ -210,10 +181,13 @@ function install_prerequisites {
             apt-get install -y node-less
             apt-get install -y python-pip
 
-            upgrade_pip '1.4'
+            log "** Upgrading pip ..."
+            pip install --upgrade pip
+#            rm /usr/bin/pip
+#            ln -s /usr/local/bin/pip /usr/bin/pip
 
             log "** Upgrading pbr ..."
-            pip_install pbr
+            pip install --upgrade pbr
 
             log "** Installing OpenStack dashboard ..."
             apt-get install -y memcached apache2 libapache2-mod-wsgi openstack-dashboard
@@ -332,7 +306,14 @@ function install_murano_apps {
         git_clone_dir="$git_clone_root/$app_name"
         chmod +x $git_clone_dir/setup*.sh
 
-        "$git_clone_dir"/setup.sh install
+        case $os_version in
+            'CentOS')
+                "$git_clone_dir"/setup-centos.sh install
+            ;;
+            'Ubuntu')
+                "$git_clone_dir"/setup.sh install
+            ;;
+        esac
 
     done
 }
@@ -348,7 +329,14 @@ function uninstall_murano_apps {
         git_clone_dir="$git_clone_root/$app_name"
         chmod +x $git_clone_dir/setup*.sh
 
-        "$git_clone_dir"/setup.sh uninstall
+        case $os_version in
+            'CentOS')
+                "$git_clone_dir"/setup-centos.sh uninstall
+            ;;
+            'Ubuntu')
+                "$git_clone_dir"/setup.sh uninstall
+            ;;
+        esac
 
         case $app_name in
             'murano-api')
@@ -394,7 +382,7 @@ function configure_murano {
                 iniset 'keystone' 'admin_user' "$ADMIN_USER" "$config_file"
                 iniset 'keystone' 'admin_password' "$ADMIN_PASSWORD" "$config_file"
             ;;
-            '/etc/murano/murano-conductor.conf')
+            '/etc/murano/conductor.conf')
                 iniset 'DEFAULT' 'log_file' '/var/log/murano/murano-conductor.log' "$config_file"
 		iniset 'DEFAULT' 'init_scripts_dir' '/etc/murano/init-scripts' "$config_file"
 		iniset 'DEFAULT' 'agent_config_dir' '/etc/murano/agent-config' "$config_file"
@@ -433,7 +421,7 @@ function configure_murano {
                     iniset 'rabbitmq' 'ssl' "True" "$config_file"
                     iniset 'keystone_authtoken' 'auth_protocol' 'https' "$config_file"
                 ;;
-                '/etc/murano/murano-conductor.conf')
+                '/etc/murano/conductor.conf')
                     local ssl_insecure='True'
                     # If any variable is not empty then ssl_insecure = False
                     if [ -n "${SSL_CA_FILE}${SSL_CERT_FILE}${SSL_KEY_FILE}" ] ; then
@@ -474,16 +462,14 @@ EOF
             esac
         fi
     done
-
-    # Clean config directory of '.sample' files
-    find /etc/murano -name "*.sample" -exec rm -f {} \;
 }
 
 
 function restart_murano {
     for service_name in $murano_services ; do
         log "** Restarting '$service_name'"
-        service "$service_name" restart
+        stop "$service_name"
+        start "$service_name"
     done
 
     log "** Restarting 'Apache'"
@@ -497,13 +483,6 @@ function restart_murano {
     esac
 }
 #-------------------------------------------------
-
-
-################################################################################
-#
-# MAIN CODE START HERE
-#
-################################################################################
 
 
 if [[ $mode =~ '?'|'help'|'-h'|'--help' ]] ; then
