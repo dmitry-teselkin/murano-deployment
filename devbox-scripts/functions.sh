@@ -218,7 +218,7 @@ function replace {
 
 
 function add_mirantis_repo() {
-
+:
 }
 
 
@@ -230,7 +230,7 @@ function add_mirantis_public_repo() {
 
     #wget ${repo_url}/Release.key -O - | apt-key add -
 
-    echo "deb ${repo_url} precise/main" > "${apt_list_file}"
+    echo "deb ${repo_url} precise main" > "${apt_list_file}"
 
     trace_out
 }
@@ -254,36 +254,50 @@ function add_mirantis_internal_repo() {
     local remote_repo_url
     local local_repo_path
 
-    if [[ -n "" ]]; then
+    if [[ -z "$repo_id" ]]; then
         echo_ "Empty repository name, won't add."
         return
     fi
 
-    case $repo_id in
-        'stable'|'testing')
-            remote_repo_url="${MIRANTIS_INTERNAL_REPO_PREFIX}/${FUEL_TARGET}-fuel-${FUEL_VERSION}-${repo_id}/ubuntu"
-            apt_list_file="/etc/apt/sources.list.d/mirantis-internal-fuel-${FUEL_VERSION}-${repo_id}.list"
+    if [[ "$repo_id" =~ (stable|testing) ]]; then
+        remote_repo_url="${MIRANTIS_INTERNAL_REPO_PREFIX}/${FUEL_TARGET}-fuel-${FUEL_VERSION}-${repo_id}/ubuntu"
+        apt_list_file="/etc/apt/sources.list.d/mirantis-internal-fuel-${FUEL_VERSION}-${repo_id}.list"
 
-            wget ${remote_repo_url}/Release.key -O - | apt-key add -
-            echo "deb ${remote_repo_url}/ ./" > "${apt_list_file}"
-        ;;
-        \d+)
-            repo_subname="${FUEL_TARGET}-fuel-${FUEL_VERSION}-${FUEL_SUITE}-${repo_id}"
-            remote_repo_url="${MIRANTIS_INTERNAL_REPO_PREFIX}/${repo_subname}/ubuntu"
-            local_repo_path="${OBS_LOCAL_REPO}/${repo_subname}-${repo_id}/ubuntu"
-            apt_list_file="/etc/apt/sources.list.d/mirantis-obs-request-${repo_id}.list"
+        wget ${remote_repo_url}/Release.key -O - | apt-key add -
+        echo "deb ${remote_repo_url}/ ./" > "${apt_list_file}"
+    elif [[ "$repo_id" =~ \d+ ]]; then
+        repo_subname="${FUEL_TARGET}-fuel-${FUEL_VERSION}-${FUEL_SUITE}-${repo_id}"
+        remote_repo_url="${MIRANTIS_INTERNAL_REPO_PREFIX}/${repo_subname}/ubuntu"
+        local_repo_path="${OBS_LOCAL_REPO}/${repo_subname}-${repo_id}/ubuntu"
+        apt_list_file="/etc/apt/sources.list.d/mirantis-obs-request-${repo_id}.list"
 
-            if [[ ! -d "${local_repo_path}" ]]; then
-                wget -r -np -nH -A *.deb,*.dsc,*.gz,*.key ${repo_url}/ -P ${OBS_LOCAL_REPO}
-                apt-key add ${local_repo_path}/Release.key
-                echo "deb file:${remote_repo_url} ./" > "${apt_list_file}"
-            fi
-        ;;
-        *)
-            echo_ "Unknown repository identifier, '$repo_id'"
-            return
-        ;;
-    esac
+        # Check if pinning preferences for local repo is set
+        if [[ ! -f "/etc/apt/preferences.d/local_repo.pref" ]]; then
+            cat << EOF > "/etc/apt/preferences.d/local_repo.pref"
+Package: *
+Pin: origin ""
+Pin-Priority: 550
+EOF
+fi
+
+        # Check if local repo folder exists
+        if [[ ! -d "${OBS_LOCAL_REPO}" ]]; then
+            mkdir -p ${OBS_LOCAL_REPO}
+        fi
+
+        # Drop repo folder if exists
+        if [[ -d "${local_repo_path}" ]]; then
+            rm -rf "${local_repo_path}"
+        fi
+
+        # Fetch repo into local store
+        wget -r -np -nH -A *.deb,*.dsc,*.gz,*.key ${repo_url}/ -P ${OBS_LOCAL_REPO}
+        apt-key add ${local_repo_path}/Release.key
+        echo "deb file:${remote_repo_url} ./" > "${apt_list_file}"
+    else
+        echo_ "Unknown repository identifier, '$repo_id'"
+        return
+    fi
 
     trace_out
 }
@@ -292,7 +306,7 @@ function add_mirantis_internal_repo() {
 function remove_mirantis_internal_repos() {
     trace_in remove_mirantis_internal_repos "$@"
 
-    
+
     trace_out
 }
 
