@@ -265,10 +265,10 @@ function add_mirantis_internal_repo() {
 
         wget ${remote_repo_url}/Release.key -O - | apt-key add -
         echo "deb ${remote_repo_url}/ ./" > "${apt_list_file}"
-    elif [[ "$repo_id" =~ \d+ ]]; then
+    elif [[ "$repo_id" =~ [[:digit:]]+ ]]; then
         repo_subname="${FUEL_TARGET}-fuel-${FUEL_VERSION}-${FUEL_SUITE}-${repo_id}"
         remote_repo_url="${MIRANTIS_INTERNAL_REPO_PREFIX}/${repo_subname}/ubuntu"
-        local_repo_path="${OBS_LOCAL_REPO}/${repo_subname}-${repo_id}/ubuntu"
+        local_repo_path="${APT_LOCAL_REPO}/${repo_subname}-${repo_id}/ubuntu"
         apt_list_file="/etc/apt/sources.list.d/mirantis-obs-request-${repo_id}.list"
 
         # Check if pinning preferences for local repo is set
@@ -281,8 +281,8 @@ EOF
 fi
 
         # Check if local repo folder exists
-        if [[ ! -d "${OBS_LOCAL_REPO}" ]]; then
-            mkdir -p ${OBS_LOCAL_REPO}
+        if [[ ! -d "${APT_LOCAL_REPO}" ]]; then
+            mkdir -p ${APT_LOCAL_REPO}
         fi
 
         # Drop repo folder if exists
@@ -291,7 +291,7 @@ fi
         fi
 
         # Fetch repo into local store
-        wget -r -np -nH -A *.deb,*.dsc,*.gz,*.key ${repo_url}/ -P ${OBS_LOCAL_REPO}
+        wget -r -np -nH -A *.deb,*.dsc,*.gz,*.key ${repo_url}/ -P ${APT_LOCAL_REPO}
         apt-key add ${local_repo_path}/Release.key
         echo "deb file:${remote_repo_url} ./" > "${apt_list_file}"
     else
@@ -319,10 +319,10 @@ function add_obs_repo() {
 
     #OBS_REPO_PREFIX=ubuntu-fuel-4.1-stable
     #OBS_URL_PREFIX=http://osci-obs.vm.mirantis.net:82
-    #OBS_LOCAL_REPO=/opt/repo
+    #APT_LOCAL_REPO=/opt/repo
 
-    if [[ ! -d "${OBS_LOCAL_REPO}" ]]; then
-        mkdir -p ${OBS_LOCAL_REPO}
+    if [[ ! -d "${APT_LOCAL_REPO}" ]]; then
+        mkdir -p ${APT_LOCAL_REPO}
     fi
 
     if [[ ! -f "/etc/apt/preferences.d/local_repo.pref" ]]; then
@@ -347,14 +347,14 @@ fi
         list_file=/etc/apt/sources.list.d/obs-request-${request_id}.list
         url=${OBS_URL_PREFIX}/${OBS_REPO_PREFIX}-${request_id}/ubuntu
 
-        local d=${OBS_LOCAL_REPO}/${OBS_REPO_PREFIX}-${request_id}
+        local d=${APT_LOCAL_REPO}/${OBS_REPO_PREFIX}-${request_id}
         if [[ -d "$d" ]]; then
             #rm -rf "$d"
             echo_ "Folder '$d' alreasy exists, skipping"
         else
-            wget -r -np -nH -A *.deb,*.dsc,*.gz,*.key ${url}/ -P ${OBS_LOCAL_REPO}
+            wget -r -np -nH -A *.deb,*.dsc,*.gz,*.key ${url}/ -P ${APT_LOCAL_REPO}
 
-            url=${OBS_LOCAL_REPO}/${OBS_REPO_PREFIX}-${request_id}/ubuntu
+            url=${APT_LOCAL_REPO}/${OBS_REPO_PREFIX}-${request_id}/ubuntu
             
             apt-key add ${url}/Release.key
 
@@ -384,7 +384,7 @@ function clean_obs_repo() {
             if [[ " $OBS_REQUEST_IDS " =~ " ${id} " ]]; then
                 echo_h2 "${id} in ${OBS_REQUEST_IDS}"
             else
-                d=${OBS_LOCAL_REPO}/${OBS_REPO_PREFIX}-${id}
+                d=${APT_LOCAL_REPO}/${OBS_REPO_PREFIX}-${id}
                 if [[ -d "$d" ]]; then
                     rm -rf "$d"
                 fi
