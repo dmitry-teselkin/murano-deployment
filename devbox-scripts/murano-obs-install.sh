@@ -3,32 +3,31 @@
 declare -A ARGS
 ARGS=($@)
 
-# Import local configuration
-if [ -f '/etc/murano-deployment/obs-config.local' ]; then
-    source /etc/murano-deployment/obs-config.local
-fi
-
 source ./functions.sh
 source ./muranorc
 source ./murano.defaults
 
 
 # Verify some variables
-die_if_not_set $LINENO OBS_URL_PREFIX
-die_if_not_set $LINENO OBS_REPO_PREFIX
-die_if_not_set $LINENO OBS_LOCAL_REPO
+die_if_not_set $LINENO MIRANTIS_PUBLIC_REPO_PREFIX
+die_if_not_set $LINENO MIRANTIS_INTERNAL_REPO_PREFIX
+die_if_not_set $LINENO APT_LOCAL_REPO
 
 
-# First, add a repo with all dependencies
-add_obs_repo
+# First, remove any repository references
+drop_mirantis_public_repos
+drop_mirantis_internal_repos
+
+apt-get update
+
 
 # Then, remove all packages that are not in OBS_REQUEST_IDS
-clean_obs_repo
+add_mirantis_internal_repo stable testing
+
 
 # Then, add per-requiest repositories
-for id in $OBS_REQUEST_IDS; do
-    add_obs_repo "$id"
-done
+add_mirantis_internal_repo "$BUILD_REQUEST_IDS"
+
 
 # Update cache before actual installation
 apt-get update
@@ -43,7 +42,7 @@ purge_murano_packages
 install_murano_packages
 
 
-configure_murano
+#configure_murano
 
 
 restart_murano

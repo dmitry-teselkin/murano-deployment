@@ -236,8 +236,8 @@ function add_mirantis_public_repo() {
 }
 
 
-function remove_mirantis_public_repos() {
-    trace_in remove_mirantis_public_repo "$@"
+function drop_mirantis_public_repos() {
+    trace_in drop_mirantis_public_repo "$@"
 
     find /etc/apt/sources.list.d -name 'mirantis-public*.list' -delete
 
@@ -248,141 +248,82 @@ function remove_mirantis_public_repos() {
 function add_mirantis_internal_repo() {
     trace_in add_mirantis_internal_repo "$@"
 
-    local repo_id=${1:-''}
+    local repo_id
     local repo_name_subname
     local apt_list_file
     local remote_repo_url
     local local_repo_path
 
-    if [[ -z "$repo_id" ]]; then
-        echo_ "Empty repository name, won't add."
-        return
-    fi
+    for repo_id in "$@"; do
+        echo_ "Adding internal repo for '$repo_id'"
 
-    if [[ "$repo_id" =~ (stable|testing) ]]; then
-        remote_repo_url="${MIRANTIS_INTERNAL_REPO_PREFIX}/${FUEL_TARGET}-fuel-${FUEL_VERSION}-${repo_id}/ubuntu"
-        apt_list_file="/etc/apt/sources.list.d/mirantis-internal-fuel-${FUEL_VERSION}-${repo_id}.list"
+        if [[ "$repo_id" =~ (stable|testing) ]]; then
+            remote_repo_url="${MIRANTIS_INTERNAL_REPO_PREFIX}/${FUEL_TARGET}-fuel-${FUEL_VERSION}-${repo_id}/ubuntu"
+            apt_list_file="/etc/apt/sources.list.d/mirantis-internal-fuel-${FUEL_VERSION}-${repo_id}.list"
 
-        wget ${remote_repo_url}/Release.key -O - | apt-key add -
-        echo "deb ${remote_repo_url}/ ./" > "${apt_list_file}"
-    elif [[ "$repo_id" =~ [[:digit:]]+ ]]; then
-        repo_subname="${FUEL_TARGET}-fuel-${FUEL_VERSION}-${FUEL_SUITE}-${repo_id}"
-        remote_repo_url="${MIRANTIS_INTERNAL_REPO_PREFIX}/${repo_subname}/ubuntu"
-        local_repo_path="${APT_LOCAL_REPO}/${repo_subname}-${repo_id}/ubuntu"
-        apt_list_file="/etc/apt/sources.list.d/mirantis-obs-request-${repo_id}.list"
+            wget ${remote_repo_url}/Release.key -O - | apt-key add -
+            echo "deb ${remote_repo_url}/ ./" > "${apt_list_file}"
+        elif [[ "$repo_id" =~ [[:digit:]]+ ]]; then
+            repo_subname="${FUEL_TARGET}-fuel-${FUEL_VERSION}-testing-${repo_id}"
+            remote_repo_url="${MIRANTIS_INTERNAL_REPO_PREFIX}/${repo_subname}/ubuntu"
+            local_repo_path="${APT_LOCAL_REPO}/${repo_subname}/ubuntu"
+            apt_list_file="/etc/apt/sources.list.d/mirantis-build-request-${repo_id}.list"
 
-        # Check if pinning preferences for local repo is set
-        if [[ ! -f "/etc/apt/preferences.d/local_repo.pref" ]]; then
-            cat << EOF > "/etc/apt/preferences.d/local_repo.pref"
+            # Check if pinning preferences for local repo is set
+            if [[ ! -f "/etc/apt/preferences.d/local_repo.pref" ]]; then
+                cat << EOF > "/etc/apt/preferences.d/local_repo.pref"
 Package: *
 Pin: origin ""
 Pin-Priority: 550
 EOF
 fi
 
-        # Check if local repo folder exists
-        if [[ ! -d "${APT_LOCAL_REPO}" ]]; then
-            mkdir -p ${APT_LOCAL_REPO}
-        fi
+            # Check if local repo folder exists
+            if [[ ! -d "${APT_LOCAL_REPO}" ]]; then
+                mkdir -p ${APT_LOCAL_REPO}
+            fi
 
-        # Drop repo folder if exists
-        if [[ -d "${local_repo_path}" ]]; then
-            rm -rf "${local_repo_path}"
-        fi
+            # Drop repo folder if exists
+            if [[ -d "${local_repo_path}" ]]; then
+                rm -rf "${local_repo_path}"
+            fi
 
-        # Fetch repo into local store
-        wget -r -np -nH -A *.deb,*.dsc,*.gz,*.key ${repo_url}/ -P ${APT_LOCAL_REPO}
-        apt-key add ${local_repo_path}/Release.key
-        echo "deb file:${remote_repo_url} ./" > "${apt_list_file}"
-    else
-        echo_ "Unknown repository identifier, '$repo_id'"
-        return
-    fi
-
-    trace_out
-}
-
-
-function remove_mirantis_internal_repos() {
-    trace_in remove_mirantis_internal_repos "$@"
-
-
-    trace_out
-}
-
-function add_obs_repo() {
-    trace_in add_obs_repo "$@"
-
-    local request_id=${1:-''}
-    local list_file
-    local url
-
-    #OBS_REPO_PREFIX=ubuntu-fuel-4.1-stable
-    #OBS_URL_PREFIX=http://osci-obs.vm.mirantis.net:82
-    #APT_LOCAL_REPO=/opt/repo
-
-    if [[ ! -d "${APT_LOCAL_REPO}" ]]; then
-        mkdir -p ${APT_LOCAL_REPO}
-    fi
-
-    if [[ ! -f "/etc/apt/preferences.d/local_repo.pref" ]]; then
-        cat << EOF > "/etc/apt/preferences.d/local_repo.pref"
-Package: *
-Pin: origin ""
-Pin-Priority: 550
-EOF
-fi
-
-    # URL example
-    # http://osci-obs.vm.mirantis.net:82/ubuntu-fuel-4.1-stable-10041/ubuntu
-
-    if [[ -z "${request_id}" ]]; then
-        list_file=/etc/apt/sources.list.d/${OBS_REPO_PREFIX}.list
-        url=${OBS_URL_PREFIX}/${OBS_REPO_PREFIX}/ubuntu
-
-        wget ${url}/Release.key -O - | apt-key add -
-
-        echo "deb ${url}/ ./" > "${list_file}"
-    else
-        list_file=/etc/apt/sources.list.d/obs-request-${request_id}.list
-        url=${OBS_URL_PREFIX}/${OBS_REPO_PREFIX}-${request_id}/ubuntu
-
-        local d=${APT_LOCAL_REPO}/${OBS_REPO_PREFIX}-${request_id}
-        if [[ -d "$d" ]]; then
-            #rm -rf "$d"
-            echo_ "Folder '$d' alreasy exists, skipping"
+            # Fetch repo into local store
+            wget -r -np -nH -A *.deb,*.dsc,*.gz,*.key ${remote_repo_url}/ -P ${APT_LOCAL_REPO}
+            apt-key add ${local_repo_path}/Release.key
+            echo "deb file:${local_repo_path} ./" > "${apt_list_file}"
         else
-            wget -r -np -nH -A *.deb,*.dsc,*.gz,*.key ${url}/ -P ${APT_LOCAL_REPO}
-
-            url=${APT_LOCAL_REPO}/${OBS_REPO_PREFIX}-${request_id}/ubuntu
-            
-            apt-key add ${url}/Release.key
-
-            echo "deb file:${url} ./" > "${list_file}"
+            echo_ "Unknown repository identifier, '$repo_id'"
+            return
         fi
-    fi
+    done
 
-    #apt-get update
     trace_out
 }
 
 
-function remove_obs_repo() {
-    trace_in remove_obs_repo "$@"
+function drop_mirantis_internal_repos() {
+    trace_in drop_mirantis_internal_repos "$@"
+
+    find /etc/apt/sources.list.d -name 'mirantis-internal*.list' -delete
+    find /etc/apt/sources.list.d -name 'mirantis-build-request*.list' -delete
+
+    rm -rf ${APT_LOCAL_REPO}
+
     trace_out
 }
 
 
-function clean_obs_repo() {
-    trace_in clean_obs_repo "$@"
+function clean_local_repo() {
+    trace_in clean_local_repo "$@"
 
     local id i d
 
-    for i in $(ls /etc/apt/sources.list.d); do
-        if [[ $i =~ obs-request-([[:digit:]]+)\.list ]]; then
+    for i in $(find /etc/apt/sources.list.d -name 'mirantis-build-request-*' -print); do
+        if [[ $i =~ mirantis-build-request-([[:digit:]]+)\.list ]]; then
             id=${BASH_REMATCH[1]}
-            if [[ " $OBS_REQUEST_IDS " =~ " ${id} " ]]; then
-                echo_h2 "${id} in ${OBS_REQUEST_IDS}"
+            if [[ " $BUILD_REQUEST_IDS " =~ " ${id} " ]]; then
+                echo_h2 "${id} in ${BUILD_REQUEST_IDS}"
             else
                 d=${APT_LOCAL_REPO}/${OBS_REPO_PREFIX}-${id}
                 if [[ -d "$d" ]]; then
@@ -608,7 +549,7 @@ function configure_murano {
 function install_murano_packages() {
     trace_in install_murano_packages "$@"
 
-    apt-get --yes --force-yes install $MURANO_PACKAGES_DEB
+    apt-get --yes --force-yes install $MURANO_PACKAGES_DEBIAN
 
     trace_out
 }
@@ -618,7 +559,7 @@ function purge_murano_packages() {
     trace_in purge_murano_packages "$@"
 
     local pkg
-    for pkg in $MURANO_PACKAGES_DEB; do
+    for pkg in $MURANO_PACKAGES_DEBIAN; do
         apt-get --yes purge $pkg
     done
 
@@ -627,8 +568,7 @@ function purge_murano_packages() {
 
 
 function restart_murano() {
-    service openstack-murano-api restart
-    service openstack-murano-conductor restart
-    service openstack-murano-repository restart
+    service murano-api restart
+    service murano-engine restart
 }
 
