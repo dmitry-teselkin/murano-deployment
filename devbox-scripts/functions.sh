@@ -217,6 +217,85 @@ function replace {
 }
 
 
+function add_mirantis_repo() {
+
+}
+
+
+function add_mirantis_public_repo() {
+    trace_in add_mirantis_public_repo "$@"
+
+    local apt_list_file="/etc/apt/sources.list.d/mirantis-public-fuel-${FUEL_VERSION}.list"
+    local repo_url="${MIRANTIS_PUBLIC_REPO_PREFIX}/${FUEL_VERSION}/ubuntu"
+
+    #wget ${repo_url}/Release.key -O - | apt-key add -
+
+    echo "deb ${repo_url} precise/main" > "${apt_list_file}"
+
+    trace_out
+}
+
+
+function remove_mirantis_public_repos() {
+    trace_in remove_mirantis_public_repo "$@"
+
+    find /etc/apt/sources.list.d -name 'mirantis-public*.list' -delete
+
+    trace_out
+}
+
+
+function add_mirantis_internal_repo() {
+    trace_in add_mirantis_internal_repo "$@"
+
+    local repo_id=${1:-''}
+    local repo_name_subname
+    local apt_list_file
+    local remote_repo_url
+    local local_repo_path
+
+    if [[ -n "" ]]; then
+        echo_ "Empty repository name, won't add."
+        return
+    fi
+
+    case $repo_id in
+        'stable'|'testing')
+            remote_repo_url="${MIRANTIS_INTERNAL_REPO_PREFIX}/${FUEL_TARGET}-fuel-${FUEL_VERSION}-${repo_id}/ubuntu"
+            apt_list_file="/etc/apt/sources.list.d/mirantis-internal-fuel-${FUEL_VERSION}-${repo_id}.list"
+
+            wget ${remote_repo_url}/Release.key -O - | apt-key add -
+            echo "deb ${remote_repo_url}/ ./" > "${apt_list_file}"
+        ;;
+        \d+)
+            repo_subname="${FUEL_TARGET}-fuel-${FUEL_VERSION}-${FUEL_SUITE}-${repo_id}"
+            remote_repo_url="${MIRANTIS_INTERNAL_REPO_PREFIX}/${repo_subname}/ubuntu"
+            local_repo_path="${OBS_LOCAL_REPO}/${repo_subname}-${repo_id}/ubuntu"
+            apt_list_file="/etc/apt/sources.list.d/mirantis-obs-request-${repo_id}.list"
+
+            if [[ ! -d "${local_repo_path}" ]]; then
+                wget -r -np -nH -A *.deb,*.dsc,*.gz,*.key ${repo_url}/ -P ${OBS_LOCAL_REPO}
+                apt-key add ${local_repo_path}/Release.key
+                echo "deb file:${remote_repo_url} ./" > "${apt_list_file}"
+            fi
+        ;;
+        *)
+            echo_ "Unknown repository identifier, '$repo_id'"
+            return
+        ;;
+    esac
+
+    trace_out
+}
+
+
+function remove_mirantis_internal_repos() {
+    trace_in remove_mirantis_internal_repos "$@"
+
+    
+    trace_out
+}
+
 function add_obs_repo() {
     trace_in add_obs_repo "$@"
 

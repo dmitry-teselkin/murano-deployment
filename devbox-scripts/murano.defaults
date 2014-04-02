@@ -1,4 +1,14 @@
 
+# Repository defaults
+# -------------------
+MIRANTIS_PUBLIC_REPO_PREFIX=${MIRANTIS_PUBLIC_REPO_PREFIX:-'http://fuel-repository.mirantis.com/fwm'}
+MIRANTIS_INTERNAL_REPO_PREFIX=${MIRANTIR_INTERNAL_REPO_PREFIX:-'http://osci-obs.vm.mirantis.net:82'}
+
+FUEL_TARGET=${FUEL_TARGET:-'ubuntu'}
+FUEL_VERSION=${FUEL_VERSION:-'5.0'}
+FUEL_SUITE=${FUEL_SUITE:-'stable'}
+# -------------------
+
 
 # Defaults
 # --------
