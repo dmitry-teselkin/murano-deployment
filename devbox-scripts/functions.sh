@@ -549,7 +549,11 @@ function configure_murano {
 function install_murano_packages() {
     trace_in install_murano_packages "$@"
 
-    apt-get --yes --force-yes install $MURANO_PACKAGES_DEBIAN
+    local pkg
+    for pkg in "$MURANO_PACKAGES_DEBIAN"; do
+        echo_h1 "Installing package '$pkg'"
+        apt-get --yes --force-yes install $pkg
+    done
 
     trace_out
 }
