@@ -10,8 +10,6 @@ if [ -f '/etc/murano-deployment/obs-config.local' ]; then
 fi
 
 source ./functions.sh
-source ./muranorc
-source ./murano.defaults
 
 
 if [[ -n "$func" ]]; then

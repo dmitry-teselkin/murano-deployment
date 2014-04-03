@@ -15,6 +15,9 @@ APT_LOCAL_REPO=${APT_LOCAL_REPO:-/opt/apt_local_repo}
 BUILD_REQUEST_IDS=${BUILD_REQUEST_IDS:-''}
 MURANO_PACKAGES_DEBIAN='murano-api murano-dashboard'
 
+LOG_FILE=${LOG_FIL:-'/tmp/murano-obs-install.log'}
+
+SCREEN_LOGDIR=${SCREEN_LOGDIR:-/tmp}
 
 # Defaults
 # --------

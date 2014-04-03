@@ -4,8 +4,6 @@ declare -A ARGS
 ARGS=($@)
 
 source ./functions.sh
-source ./muranorc
-source ./murano.defaults
 
 
 # Verify some variables
