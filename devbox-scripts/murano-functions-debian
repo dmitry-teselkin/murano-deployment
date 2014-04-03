@@ -252,8 +252,8 @@ function configure_murano_api() {
     iniset "$MURANO_CONF_FILE" 'database' 'connection' "$(database_connection_url murano)"
 
     # Keystone settings
-    iniset "$MURANO_CONF_FILE" 'keystone_authtoken' 'auth_host' "$MURANO_AUTH_HOST"
-    iniset "$MURANO_CONF_FILE" 'keystone_authtoken' 'auth_port' "$MURANO_AUTH_PORT"
+    iniset "$MURANO_CONF_FILE" 'keystone_authtoken' 'auth_host' "$AUTH_HOST"
+    iniset "$MURANO_CONF_FILE" 'keystone_authtoken' 'auth_port' "$AUTH_PORT"
     iniset "$MURANO_CONF_FILE" 'keystone_authtoken' 'admin_user' "$ADMIN_USERNAME"
     iniset "$MURANO_CONF_FILE" 'keystone_authtoken' 'admin_password' "$ADMIN_PASSWORD"
     iniset "$MURANO_CONF_FILE" 'keystone_authtoken' 'signing_dir' "$MURANO_API_SIGNING_DIR"
@@ -303,7 +303,7 @@ function configure_dashboard_local_settings() {
 #MURANO_CONFIG_SECTION_BEGIN
 #-------------------------------------------------------------------------------
 
-OPENSTACK_HOST = '$MURANO_AUTH_HOST'
+OPENSTACK_HOST = '$AUTH_HOST'
 EOF
 
     # Insert settings
