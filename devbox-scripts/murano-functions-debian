@@ -222,104 +222,42 @@ function cleanup_openstack_dashboard() {
 
 # Murano API functions
 #---------------------
+function install_murano_api() {
+    trace_in install_murano_api "$@"
+
+    apt_install_anyway murano-api
+
+    trace_out
+}
+
+
 function configure_murano_api() {
     trace_in configure_murano_api "$@"
 
-    # Murano Api Configuration
+    echo_ "Configuring file '$MURANO_CONF_FILE'"
+
+    # Logging settings
+    iniset "$MURANO_CONF_FILE" 'DEFAULT' 'debug' "$(trueorfalse False $MURANO_DEBUG)"
+    iniset "$MURANO_CONF_FILE" 'DEFAULT' 'verbose' "$(trueorfalse False $MURANO_VERBOSE)"
+    iniset "$MURANO_CONF_FILE" 'DEFAULT' 'log_file' "$MURANO_LOG_DIR/murano-api.log"
+
+    # RabbitMQ settings
+    iniset "$MURANO_CONF_FILE" 'DEFAULT' 'rabbit_host' "$RABBIT_HOST"
+    iniset "$MURANO_CONF_FILE" 'DEFAULT' 'rabbit_port' "$RABBIT_PORT"
+    iniset "$MURANO_CONF_FILE" 'DEFAULT' 'rabbit_userid' "$RABBIT_USERID"
+    iniset "$MURANO_CONF_FILE" 'DEFAULT' 'rabbit_password' "$RABBIT_PASSWORD"
+    iniset "$MURANO_CONF_FILE" 'DEFAULT' 'rabbit_virtual_host' "$RABBIT_VHOST"
+
+    # Database settings
+    iniset "$MURANO_CONF_FILE" 'database' 'connection' "$(database_connection_url murano)"
+
+    # Keystone settings
+    iniset "$MURANO_CONF_FILE" 'keystone_authtoken' 'auth_host' "$MURANO_AUTH_HOST"
+    iniset "$MURANO_CONF_FILE" 'keystone_authtoken' 'auth_port' "$MURANO_AUTH_PORT"
+    iniset "$MURANO_CONF_FILE" 'keystone_authtoken' 'admin_user' "$ADMIN_USERNAME"
+    iniset "$MURANO_CONF_FILE" 'keystone_authtoken' 'admin_password' "$ADMIN_PASSWORD"
+    iniset "$MURANO_CONF_FILE" 'keystone_authtoken' 'signing_dir' "$MURANO_API_SIGNING_DIR"
     #-------------------------
-    echo_ "Configuring file '$MURANO_API_CONF'"
-
-    iniset "$MURANO_API_CONF" 'DEFAULT' 'Debug' "$(trueorfalse False $MURANO_DEBUG)"
-    iniset "$MURANO_API_CONF" 'DEFAULT' 'Verbose' "$(trueorfalse False $MURANO_VERBOSE)"
-
-    iniset "$MURANO_API_CONF" 'DEFAULT' 'log_file' "$MURANO_LOG_DIR/murano-api.log"
-
-    iniset "$MURANO_API_CONF" 'database' 'connection' "$(database_connection_url murano)"
-
-    iniset "$MURANO_API_CONF" 'rabbitmq' 'host' "$MURANO_RABBIT_HOST"
-    iniset "$MURANO_API_CONF" 'rabbitmq' 'port' "$MURANO_RABBIT_PORT"
-    iniset "$MURANO_API_CONF" 'rabbitmq' 'login' "$MURANO_RABBIT_LOGIN"
-    iniset "$MURANO_API_CONF" 'rabbitmq' 'password' "$MURANO_RABBIT_PASSWORD"
-    iniset "$MURANO_API_CONF" 'rabbitmq' 'virtual_host' "$MURANO_RABBIT_VHOST"
-    iniset "$MURANO_API_CONF" 'rabbitmq' 'ssl' "False"
-
-    iniset "$MURANO_API_CONF" 'keystone_authtoken' 'auth_host' "$MURANO_AUTH_HOST"
-    iniset "$MURANO_API_CONF" 'keystone_authtoken' 'admin_user' "$ADMIN_USERNAME"
-    iniset "$MURANO_API_CONF" 'keystone_authtoken' 'admin_password' "$ADMIN_PASSWORD"
-    iniset "$MURANO_API_CONF" 'keystone_authtoken' 'signing_dir' "$MURANO_API_SIGNING_DIR"
-
-    if [[ $(trueorfalse False $MURANO_SSL_ENABLED) = 'True' ]]; then
-        generate_sample_certificate "$MURANO_CONF_DIR" 'server'
-
-        iniset "$MURANO_API_CONF" 'ssl' 'cert_file' "$MURANO_CONF_DIR/server.crt"
-        iniset "$MURANO_API_CONF" 'ssl' 'key_file' "$MURANO_CONF_DIR/server.key"
-
-        iniset "$MURANO_API_CONF" 'rabbitmq' 'ssl' "True"
-
-        iniset "$MURANO_API_CONF" 'keystone_authtoken' 'auth_protocol' 'https'
-    fi
-    #-------------------------
-
-    # Murano Conductor Configuration
-    #-------------------------------
-    echo_h2 "Configuring file '$MURANO_CONDUCTOR_CONF'"
-
-    iniset "$MURANO_CONDUCTOR_CONF" 'DEFAULT' 'Debug' "$(trueorfalse False $MURANO_DEBUG)"
-    iniset "$MURANO_CONDUCTOR_CONF" 'DEFAULT' 'Verbose' "$(trueorfalse False $MURANO_VERBOSE)"
-
-    iniset "$MURANO_CONDUCTOR_CONF" 'DEFAULT' 'log_file' "$MURANO_LOG_DIR/murano-conductor.log"
-    iniset "$MURANO_CONDUCTOR_CONF" 'DEFAULT' 'data_dir' "$MURANO_CONDUCTOR_CACHE"
-    iniset "$MURANO_CONDUCTOR_CONF" 'DEFAULT' 'init_scripts_dir' "$MURANO_CONF_DIR/init-scripts"
-    iniset "$MURANO_CONDUCTOR_CONF" 'DEFAULT' 'agent_config_dir' "$MURANO_CONF_DIR/agent-config"
-
-    iniset "$MURANO_CONDUCTOR_CONF" 'keystone' 'auth_url' "$MURANO_AUTH_URL"
-
-    iniset "$MURANO_CONDUCTOR_CONF" 'rabbitmq' 'host' "$MURANO_RABBIT_HOST"
-    iniset "$MURANO_CONDUCTOR_CONF" 'rabbitmq' 'port' "$MURANO_RABBIT_PORT"
-    iniset "$MURANO_CONDUCTOR_CONF" 'rabbitmq' 'login' "$MURANO_RABBIT_LOGIN"
-    iniset "$MURANO_CONDUCTOR_CONF" 'rabbitmq' 'password' "$MURANO_RABBIT_PASSWORD"
-    iniset "$MURANO_CONDUCTOR_CONF" 'rabbitmq' 'virtual_host' "$MURANO_RABBIT_VHOST"
-
-    iniset "$MURANO_CONDUCTOR_CONF" 'rabbitmq' 'ssl' "False"
-
-    if [[ $(trueorfalse False $MURANO_SSL_ENABLED) = 'True' ]]; then
-        local ssl_insecure='True'
-        # If any variable is not empty then ssl_insecure = False
-        if [[ -n "${MURANO_SSL_CA_FILE}${MURANO_SSL_CERT_FILE}${MURANO_SSL_KEY_FILE}" ]]; then
-            ssl_insecure='False'
-        fi
-
-        iniset "$MURANO_CONDUCTOR_CONF" 'keystone' 'ca_file' "$MURANO_SSL_CA_FILE"
-        iniset "$MURANO_CONDUCTOR_CONF" 'keystone' 'cert_file' "$MURANO_SSL_CERT_FILE"
-        iniset "$MURANO_CONDUCTOR_CONF" 'keystone' 'key_file' "$MURANO_SSL_KEY_FILE"
-        iniset "$MURANO_CONDUCTOR_CONF" 'keystone' 'insecure' "$ssl_insecure"
-
-        iniset "$MURANO_CONDUCTOR_CONF" 'heat' 'ca_file' "$MURANO_SSL_CA_FILE"
-        iniset "$MURANO_CONDUCTOR_CONF" 'heat' 'cert_file' "$MURANO_SSL_CERT_FILE"
-        iniset "$MURANO_CONDUCTOR_CONF" 'heat' 'key_file' "$MURANO_SSL_KEY_FILE"
-        iniset "$MURANO_CONDUCTOR_CONF" 'heat' 'insecure' "$ssl_insecure"
-
-        iniset "$MURANO_CONDUCTOR_CONF" 'rabbitmq' 'ssl' "True"
-    fi
-    #-------------------------------
-
-
-    # Murano Repository Configuration
-    #--------------------------------
-    echo_h2 "Configuring file '$MURANO_REPOSITORY_CONF'"
-
-    iniset "$MURANO_REPOSITORY_CONF" 'DEFAULT' 'Debug' "$(trueorfalse False $MURANO_DEBUG)"
-    iniset "$MURANO_REPOSITORY_CONF" 'DEFAULT' 'Verbose' "$(trueorfalse False $MURANO_VERBOSE)"
-
-    iniset "$MURANO_REPOSITORY_CONF" 'DEFAULT' 'log_file' "$MURANO_LOG_DIR/murano-repository.log"
-    iniset "$MURANO_REPOSITORY_CONF" 'DEFAULT' 'data_dir' "$MURANO_REPOSITORY_CACHE"
-    iniset "$MURANO_REPOSITORY_CONF" 'DEFAULT' 'cache_dir' "$MURANO_REPOSITORY_CACHE"
-
-    iniset "$MURANO_REPOSITORY_CONF" 'keystone' 'auth_host' "$MURANO_AUTH_HOST"
-    iniset "$MURANO_REPOSITORY_CONF" 'keystone' 'admin_user' "$ADMIN_USERNAME"
-    iniset "$MURANO_REPOSITORY_CONF" 'keystone' 'admin_password' "$ADMIN_PASSWORD"
-    iniset "$MURANO_REPOSITORY_CONF" 'keystone' 'signing_dir' "$MURANO_REPOSITORY_SIGNING_DIR"
-    #--------------------------------
 
     trace_out
 }
@@ -343,6 +281,9 @@ function install_murano_dashboard() {
 
 function configure_murano_dashboard() {
     trace_in configure_murano_dashboard "$@"
+
+    configure_dashboard_local_settings
+
     trace_out
 }
 
@@ -395,35 +336,6 @@ EOF
 
 # configure_murano() - Set config files, create data dirs, etc
 function configure_murano_extras {
-
-    # PowerShell init script
-    #-----------------------
-    echo_h2 "Configuring PowerShell init scripts"
-
-    if [[ -n "$MURANO_FILE_SHARE_HOST" ]]; then
-        replace '%MURANO_SERVER_ADDRESS%' "$MURANO_FILE_SHARE_HOST" "$MURANO_CONF_DIR/init-scripts/init.ps1"
-    fi
-    #-----------------------
-
-
-    # Templates Configuration
-    #------------------------
-    echo_h2 "Configuring templates"
-
-    if [[ -n "$MURANO_RABBIT_HOST_ALT" ]]; then
-        replace '%RABBITMQ_HOST%' "$MURANO_RABBIT_HOST_ALT" "$MURANO_CONF_DIR/agent-config/Default.template"
-        replace '%RABBITMQ_HOST%' "$MURANO_RABBIT_HOST_ALT" "$MURANO_CONF_DIR/agent-config/Demo.template"
-        replace '%RABBITMQ_HOST%' "$MURANO_RABBIT_HOST_ALT" "$MURANO_CONF_DIR/agent-config/Linux.template"
-    fi
-
-    if [[ $(trueorfalse False $MURANO_SSL_ENABLED) = 'True' ]]; then
-        replace '%RABBITMQ_SSL%' 'true' "$MURANO_CONF_DIR/agent-config/Default.template"
-        replace '%RABBITMQ_SSL%' 'true' "$MURANO_CONF_DIR/agent-config/Demo.template"
-        replace '%RABBITMQ_SSL%' 'true' "$MURANO_CONF_DIR/agent-config/Linux.template"
-    fi
-    #------------------------
-
-
     # Create dirs / fix permissions
     #------------------------------
     chmod -R 755 "$MURANO_CACHE_DIR"

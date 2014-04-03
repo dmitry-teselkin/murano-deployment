@@ -110,3 +110,27 @@ function upgrade_pip() {
 function replace {
     sed -i "s/$1/$2/g" "$3"
 }
+
+
+function insert_block_into_file() {
+    local target_file=$1
+    local insert_file=$2
+    local pattern=$3
+
+    if [[ -z "$pattern" ]]; then
+        cat "$insert_file" >> "$target_file"
+    else
+        sed -ne "/$pattern/r  $insert_file" -e 1x  -e '2,${x;p}' -e '${x;p}' -i "$target_file"
+    fi
+}
+
+
+function remove_block_from_file() {
+    local target_file=$1
+    local from_line=${2:-'#MURANO_CONFIG_SECTION_BEGIN'}
+    local to_line=${3:-'#MURANO_CONFIG_SECTION_END'}
+
+    if [[ -f "$config_file" ]]; then
+        sed -e "/^${from_line}/,/^${to_line}/ d" -i "$target_file"
+    fi
+}
