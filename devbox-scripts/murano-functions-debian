@@ -5,6 +5,55 @@ function add_mirantis_repo() {
 }
 
 
+function database_connection_url() {
+    local db="$1"
+    echo "sqlite://${MURANO_CACHE_DIR}/${db}.sqlite"
+}
+
+
+# Repository managing functions
+#------------------------------
+functions disable_system_repos() {
+    trace_in disable_system_repos "$@"
+
+    for f in $(find /etc/apt -name '*.list'); do
+        if [[ $f =~ mirantis-.* ]]; then
+            echo_ "Won't change mirantis repo file '$f'"
+        else
+            echo_ "Disabling repo from file '$f'"
+            mv -f $f $f.disabled
+        fi
+    done
+
+    echo_ "Updating repository ..."
+    apt-get -q update
+
+    trace_out
+}
+
+
+function enable_system_repos() {
+    trace_in enable_system_repos "$@"
+
+    for f in $(find /etc/apt -name '*.list.disabled'); do
+        if [[ $f =~ mirantis-.* ]]; then
+            echo_ "Won't change mirantis repo file '$f'"
+        else
+            echo_ "Enabling repo from file '$f'"
+            mv -f $f ${f%.disabled}
+        fi
+    done
+
+    echo_ "Updating repository ..."
+    apt-get -q update
+
+    trace_out
+}
+#------------------------------
+
+
+# Mirantis Public Repo functions
+#-------------------------------
 function add_mirantis_public_repo() {
     trace_in add_mirantis_public_repo "$@"
 
@@ -15,6 +64,9 @@ function add_mirantis_public_repo() {
 
     echo "deb ${repo_url} precise main" > "${apt_list_file}"
 
+    echo_ "Updating repository ..."
+    apt-get -q update
+
     trace_out
 }
 
@@ -24,10 +76,17 @@ function drop_mirantis_public_repos() {
 
     find /etc/apt/sources.list.d -name 'mirantis-public*.list' -delete
 
+    echo_ "Updating repository ..."
+    apt-get -q update
+
     trace_out
 }
+#-------------------------------
 
 
+
+# Mirantis Internal Repo functions
+#---------------------------------
 function add_mirantis_internal_repo() {
     trace_in add_mirantis_internal_repo "$@"
 
@@ -81,6 +140,9 @@ fi
         fi
     done
 
+    echo_ "Updating repository ..."
+    apt-get -q update
+
     trace_out
 }
 
@@ -93,10 +155,14 @@ function drop_mirantis_internal_repos() {
 
     rm -rf ${APT_LOCAL_REPO}
 
+    echo_ "Updating repository ..."
+    apt-get -q update
+
     trace_out
 }
 
 
+#TODO(): make this function work :)
 function clean_local_repo() {
     trace_in clean_local_repo "$@"
 
@@ -119,10 +185,14 @@ function clean_local_repo() {
 
     trace_out
 }
+#---------------------------------
 
 
-function install_murano_prereqs() {
-    trace_in install_murano_prereqs "$@"
+
+# Openstack Dashboard functions
+#------------------------------
+function install_openstack_dashboard() {
+    trace_in install_openstack_dashboard "$@"
 
     apt-get install -y openstack-dashboard
     dpkg --purge openstack-dashboard-ubuntu-theme
@@ -132,49 +202,24 @@ function install_murano_prereqs() {
 }
 
 
-function database_connection_url() {
-    local db="$1"
-    echo "sqlite://${MURANO_CACHE_DIR}/${db}.sqlite"
+function configure_openstack_dashboard() {
+    trace_in configure_openstack_dashboard "$@"
+    trace_out
 }
 
 
-function configure_dashboard_local_settings() {
-    cat << EOF >> "$HORIZON_LOCAL_CONFIG"
-
-#MURANO_CONFIG_SECTION_BEGIN
-#-------------------------------------------------------------------------------
-
-OPENSTACK_HOST = '$MURANO_AUTH_HOST'
-EOF
-
-    if [[ $(trueorfalse Flase $MURANO_SSL_ENABLED) = 'True' ]]; then
-        cat << EOF >> "$HORIZON_LOCAL_CONFIG"
-OPENSTACK_SSL_NO_VERIFY = True
-OPENSTACK_KEYSTONE_URL = "https://%s:5000/v2.0" % OPENSTACK_HOST
-OPENSTACK_KEYSTONE_ADMIN_URL = "https://%s:35357/v2.0" % OPENSTACK_HOST
-QUANTUM_URL = "https://%s" % OPENSTACK_HOST
-EOF
-    else
-        cat << EOF >> "$HORIZON_LOCAL_CONFIG"
-OPENSTACK_KEYSTONE_URL = "http://%s:5000/v2.0" % OPENSTACK_HOST
-OPENSTACK_KEYSTONE_ADMIN_URL = "http://%s:35357/v2.0" % OPENSTACK_HOST
-QUANTUM_URL = "http://%s" % OPENSTACK_HOST
-ALLOWED_HOSTS = '*'
-EOF
-    fi
-
-        cat << EOF >> "$HORIZON_LOCAL_CONFIG"
-
-#-------------------------------------------------------------------------------
-#MURANO_CONFIG_SECTION_END
-
-EOF
-
+function cleanup_openstack_dashboard() {
+    trace_in cleanup_openstack_dashboard "$@"
+    trace_out
 }
+#------------------------------
 
 
-# configure_murano() - Set config files, create data dirs, etc
-function configure_murano {
+
+# Murano API functions
+#---------------------
+function configure_murano_api() {
+    trace_in configure_murano_api "$@"
 
     # Murano Api Configuration
     #-------------------------
@@ -210,7 +255,6 @@ function configure_murano {
         iniset "$MURANO_API_CONF" 'keystone_authtoken' 'auth_protocol' 'https'
     fi
     #-------------------------
-
 
     # Murano Conductor Configuration
     #-------------------------------
@@ -273,6 +317,74 @@ function configure_murano {
     iniset "$MURANO_REPOSITORY_CONF" 'keystone' 'signing_dir' "$MURANO_REPOSITORY_SIGNING_DIR"
     #--------------------------------
 
+    trace_out
+}
+
+
+function cleanup_murano_api() {
+    trace_in cleanup_murano_api "$@"
+    trace_out
+}
+#---------------------
+
+
+
+# Murano Dashboard functions
+#---------------------------
+function configure_murano_dashboard() {
+    trace_in configure_murano_dashboard "$@"
+    trace_out
+}
+
+
+function cleanup_murano_dashboard() {
+    trace_in cleanup_murano_dashboard "$@"
+    trace_out
+}
+#---------------------------
+
+
+
+function configure_dashboard_local_settings() {
+    # Insert header
+    cat << EOF >> "$HORIZON_LOCAL_CONFIG"
+
+#MURANO_CONFIG_SECTION_BEGIN
+#-------------------------------------------------------------------------------
+
+OPENSTACK_HOST = '$MURANO_AUTH_HOST'
+EOF
+
+    # Insert settings
+    if [[ $(trueorfalse Flase $MURANO_SSL_ENABLED) = 'True' ]]; then
+        cat << EOF >> "$HORIZON_LOCAL_CONFIG"
+OPENSTACK_SSL_NO_VERIFY = True
+OPENSTACK_KEYSTONE_URL = "https://%s:5000/v2.0" % OPENSTACK_HOST
+OPENSTACK_KEYSTONE_ADMIN_URL = "https://%s:35357/v2.0" % OPENSTACK_HOST
+QUANTUM_URL = "https://%s" % OPENSTACK_HOST
+EOF
+    else
+        cat << EOF >> "$HORIZON_LOCAL_CONFIG"
+OPENSTACK_KEYSTONE_URL = "http://%s:5000/v2.0" % OPENSTACK_HOST
+OPENSTACK_KEYSTONE_ADMIN_URL = "http://%s:35357/v2.0" % OPENSTACK_HOST
+QUANTUM_URL = "http://%s" % OPENSTACK_HOST
+ALLOWED_HOSTS = '*'
+EOF
+    fi
+
+    # Insert footer
+    cat << EOF >> "$HORIZON_LOCAL_CONFIG"
+
+#-------------------------------------------------------------------------------
+#MURANO_CONFIG_SECTION_END
+
+EOF
+
+}
+
+
+# configure_murano() - Set config files, create data dirs, etc
+function configure_murano_extras {
 
     # PowerShell init script
     #-----------------------
@@ -358,4 +470,3 @@ function restart_murano() {
     service murano-api restart
     service murano-engine restart
 }
-
