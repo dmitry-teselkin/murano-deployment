@@ -11,9 +11,13 @@ function database_connection_url() {
 }
 
 
+function apt_install_anyway() {
+    apt-get install --yes --force-yes --allow-unauthenticated "$@"
+}
+
 # Repository managing functions
 #------------------------------
-functions disable_system_repos() {
+function disable_system_repos() {
     trace_in disable_system_repos "$@"
 
     for f in $(find /etc/apt -name '*.list'); do
@@ -194,7 +198,7 @@ function clean_local_repo() {
 function install_openstack_dashboard() {
     trace_in install_openstack_dashboard "$@"
 
-    apt-get install -y openstack-dashboard
+    apt_install_anyway openstack-dashboard
     dpkg --purge openstack-dashboard-ubuntu-theme
     service apache2 restart
 
@@ -331,6 +335,12 @@ function cleanup_murano_api() {
 
 # Murano Dashboard functions
 #---------------------------
+function install_murano_dashboard() {
+    trace_in install_murano_dashboard "#@"
+    trace_out
+}
+
+
 function configure_murano_dashboard() {
     trace_in configure_murano_dashboard "$@"
     trace_out
@@ -447,7 +457,7 @@ function install_murano_packages() {
     local pkg
     for pkg in $MURANO_PACKAGES_DEBIAN; do
         echo_h1 "Installing package '$pkg'"
-        apt-get --yes --force-yes --allow-unauthenticated install $pkg
+        apt_install_anyway $pkg
     done
 
     trace_out

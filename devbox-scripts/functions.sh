@@ -4,15 +4,15 @@ TRACE_DEPTH=${TRACE_OFFSET:-0}
 TRACE_STACK=${TRACE_NAME:-''}
 
 
+# Import common functions from Devstack
+source ./functions-common
+
 # Import settings
 if [[ -f "./muranorc" ]]; then
     source ./muranorc
 fi
 source ./muranorc-defaults
 
-
-# Import common functions from Devstack
-source ./functions-common
 
 GetOSVersion
 
