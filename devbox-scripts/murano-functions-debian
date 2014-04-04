@@ -30,6 +30,38 @@ function install_mysql() {
     service mysql restart
 }
 
+
+function create_mysql_database() {
+    local db=${1:-'murano'}
+
+    echo_ "Dropping database '$db' ..."
+    mysql -uroot -p$MYSQL_PASSWORD <<EOF
+DROP DATABASE $db;
+EOF
+
+    echo_ "Creating database '$db' ..."
+    mysql -u root -p$MYSQL_PASSWORD <<EOF
+CREATE DATABASE $db;
+GRANT ALL PRIVILEGES ON $db.* TO '$MYSQL_USERNAME'@'localhost' IDENTIFIED BY '$MYSQL_PASSWORD';
+GRANT ALL PRIVILEGES ON $db.* TO '$MYSQL_USERNAME'@'127.0.0.1' IDENTIFIED BY '$MYSQL_PASSWORD';
+EOF
+}
+
+
+function initialize_murano_database() {
+    local now
+
+    murano-manage --config-file $MURANO_CONF_FILE db_sync
+
+    for id in 1 2 3 4 5; do
+        now=$(date --rfc-3339=ns)
+        now=${now%%.*}
+        mysql -u root -p$MYSQL_PASSWORD <<EOF
+USE murano;
+INSERT INTO category (id,name,created,updated) VALUES ('${id}','Category${id}','${now}','${now}');
+EOF
+    done
+}
 #----------------
 
 
