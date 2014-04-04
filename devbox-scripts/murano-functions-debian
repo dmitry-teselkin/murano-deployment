@@ -7,13 +7,31 @@ function add_mirantis_repo() {
 
 function database_connection_url() {
     local db="$1"
-    echo "sqlite://${MURANO_CACHE_DIR}/${db}.sqlite"
+    #echo "sqlite://${MURANO_CACHE_DIR}/${db}.sqlite"
+    echo "mysql://${MYSQL_USERNAME}:${MYSQL_PASSWORD}@localhost:3306/${db}"
 }
 
 
 function apt_install_anyway() {
     apt-get install --yes --force-yes --allow-unauthenticated "$@"
 }
+
+
+# MySQL functions
+#----------------
+function install_mysql() {
+    debconf-set-selections <<< "mysql-server mysql-server/root_password password $MYSQL_PASSWORD"
+    debconf-set-selections <<< "mysql-server mysql-server/root_password_again password $MYSQL_PASSWORD"
+
+    apt-get install --yes python-mysqldb mysql-server
+
+    sed -i 's/127.0.0.1/0.0.0.0/g' /etc/mysql/my.cnf
+
+    service mysql restart
+}
+
+#----------------
+
 
 # Repository managing functions
 #------------------------------
