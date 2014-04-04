@@ -357,38 +357,16 @@ function cleanup_murano_dashboard() {
 function configure_dashboard_local_settings() {
     # Insert header
     cat << EOF >> "$HORIZON_LOCAL_CONFIG"
-
 #MURANO_CONFIG_SECTION_BEGIN
 #-------------------------------------------------------------------------------
-
 OPENSTACK_HOST = '$AUTH_HOST'
-EOF
-
-    # Insert settings
-    if [[ $(trueorfalse Flase $MURANO_SSL_ENABLED) = 'True' ]]; then
-        cat << EOF >> "$HORIZON_LOCAL_CONFIG"
-OPENSTACK_SSL_NO_VERIFY = True
-OPENSTACK_KEYSTONE_URL = "https://%s:5000/v2.0" % OPENSTACK_HOST
-OPENSTACK_KEYSTONE_ADMIN_URL = "https://%s:35357/v2.0" % OPENSTACK_HOST
-QUANTUM_URL = "https://%s" % OPENSTACK_HOST
-EOF
-    else
-        cat << EOF >> "$HORIZON_LOCAL_CONFIG"
 OPENSTACK_KEYSTONE_URL = "http://%s:5000/v2.0" % OPENSTACK_HOST
 OPENSTACK_KEYSTONE_ADMIN_URL = "http://%s:35357/v2.0" % OPENSTACK_HOST
 QUANTUM_URL = "http://%s" % OPENSTACK_HOST
 ALLOWED_HOSTS = '*'
-EOF
-    fi
-
-    # Insert footer
-    cat << EOF >> "$HORIZON_LOCAL_CONFIG"
-
 #-------------------------------------------------------------------------------
 #MURANO_CONFIG_SECTION_END
-
 EOF
-
 }
 
 
@@ -452,7 +430,7 @@ function install_murano() {
     enable_system_repos
 
     install_mysql
-    install_openstack_dashboard
+    #install_openstack_dashboard
 
     disable_system_repos
 
