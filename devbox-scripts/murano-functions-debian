@@ -68,7 +68,7 @@ EOF
 # Repository managing functions
 #------------------------------
 function disable_system_repos() {
-    trace_in disable_system_repos "$@"
+    trace_in ${FUNCNAME} "$@"
 
     for f in $(find /etc/apt -name '*.list'); do
         if [[ $f =~ mirantis-.* ]]; then
@@ -87,7 +87,7 @@ function disable_system_repos() {
 
 
 function enable_system_repos() {
-    trace_in enable_system_repos "$@"
+    trace_in ${FUNCNAME} "$@"
 
     for f in $(find /etc/apt -name '*.list.disabled'); do
         if [[ $f =~ mirantis-.* ]]; then
@@ -109,7 +109,7 @@ function enable_system_repos() {
 # Mirantis Public Repo functions
 #-------------------------------
 function add_mirantis_public_repo() {
-    trace_in add_mirantis_public_repo "$@"
+    trace_in ${FUNCNAME} "$@"
 
     local apt_list_file="/etc/apt/sources.list.d/mirantis-public-fuel-${FUEL_VERSION}.list"
     local repo_url="${MIRANTIS_PUBLIC_REPO_PREFIX}/${FUEL_VERSION}/ubuntu"
@@ -126,7 +126,7 @@ function add_mirantis_public_repo() {
 
 
 function drop_mirantis_public_repos() {
-    trace_in drop_mirantis_public_repo "$@"
+    trace_in ${FUNCNAME} "$@"
 
     find /etc/apt/sources.list.d -name 'mirantis-public*.list' -delete
 
@@ -142,7 +142,7 @@ function drop_mirantis_public_repos() {
 # Mirantis Internal Repo functions
 #---------------------------------
 function add_mirantis_internal_repo() {
-    trace_in add_mirantis_internal_repo "$@"
+    trace_in ${FUNCNAME} "$@"
 
     local repo_id
     local repo_name_subname
@@ -202,7 +202,7 @@ fi
 
 
 function drop_mirantis_internal_repos() {
-    trace_in drop_mirantis_internal_repos "$@"
+    trace_in ${FUNCNAME} "$@"
 
     find /etc/apt/sources.list.d -name 'mirantis-internal*.list' -delete
     find /etc/apt/sources.list.d -name 'mirantis-build-request*.list' -delete
@@ -218,7 +218,7 @@ function drop_mirantis_internal_repos() {
 
 #TODO(): make this function work :)
 function clean_local_repo() {
-    trace_in clean_local_repo "$@"
+    trace_in ${FUNCNAME} "$@"
 
     local id i d
 
@@ -246,7 +246,7 @@ function clean_local_repo() {
 # Openstack Dashboard functions
 #------------------------------
 function install_openstack_dashboard() {
-    trace_in install_openstack_dashboard "$@"
+    trace_in ${FUNCNAME} "$@"
 
     apt_install_anyway openstack-dashboard
     dpkg --purge openstack-dashboard-ubuntu-theme
@@ -257,13 +257,13 @@ function install_openstack_dashboard() {
 
 
 function configure_openstack_dashboard() {
-    trace_in configure_openstack_dashboard "$@"
+    trace_in ${FUNCNAME} "$@"
     trace_out
 }
 
 
 function cleanup_openstack_dashboard() {
-    trace_in cleanup_openstack_dashboard "$@"
+    trace_in ${FUNCNAME} "$@"
     trace_out
 }
 #------------------------------
@@ -273,7 +273,7 @@ function cleanup_openstack_dashboard() {
 # Murano API functions
 #---------------------
 function install_murano_api() {
-    trace_in install_murano_api "$@"
+    trace_in ${FUNCNAME} "$@"
 
     apt_install_anyway murano-api
 
@@ -282,7 +282,7 @@ function install_murano_api() {
 
 
 function configure_murano_api() {
-    trace_in configure_murano_api "$@"
+    trace_in ${FUNCNAME} "$@"
 
     echo_ "Configuring file '$MURANO_CONF_FILE'"
 
@@ -314,7 +314,7 @@ function configure_murano_api() {
 
 
 function cleanup_murano_api() {
-    trace_in cleanup_murano_api "$@"
+    trace_in ${FUNCNAME} "$@"
     trace_out
 }
 #---------------------
@@ -324,13 +324,13 @@ function cleanup_murano_api() {
 # Murano Dashboard functions
 #---------------------------
 function install_murano_dashboard() {
-    trace_in install_murano_dashboard "#@"
+    trace_in ${FUNCNAME} "$@"
     trace_out
 }
 
 
 function configure_murano_dashboard() {
-    trace_in configure_murano_dashboard "$@"
+    trace_in ${FUNCNAME} "$@"
 
     configure_dashboard_local_settings
 
@@ -339,7 +339,7 @@ function configure_murano_dashboard() {
 
 
 function cleanup_murano_dashboard() {
-    trace_in cleanup_murano_dashboard "$@"
+    trace_in ${FUNCNAME} "$@"
     trace_out
 }
 #---------------------------
@@ -414,7 +414,7 @@ function configure_murano_extras {
 
 
 function install_murano_packages() {
-    trace_in install_murano_packages "$@"
+    trace_in ${FUNCNAME} "$@"
 
     local pkg
     for pkg in $MURANO_PACKAGES_DEBIAN; do
@@ -427,7 +427,7 @@ function install_murano_packages() {
 
 
 function purge_murano_packages() {
-    trace_in purge_murano_packages "$@"
+    trace_in ${FUNCNAME} "$@"
 
     local pkg
     for pkg in $MURANO_PACKAGES_DEBIAN; do
