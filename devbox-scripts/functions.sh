@@ -20,15 +20,46 @@ GetOSVersion
 case $os_VENDOR in
     'Ubuntu')
         source ./murano-functions-debian
+        if [[ -f ./murano-functions-debian-help ]]; then
+            source ./murano-functions-debian-help
+        fi
     ;;
     'Red Hat'|'CentOS')
         source ./murano-functions-redhat
+        if [[ -f ./murano-functions-redhat-help ]]; then
+            source ./murano-functions-redhat-help
+        fi
     ;;
     *)
         die "'$os_VENDOR' isn't supported by this script."
     ;;
 esac
 
+
+function help_ {
+    cat << EOF
+
+SUMMARY
+	devbox-manage - a script which provides several functions to help you manage Murano devbox installation.
+
+USAGE
+
+	devbox-manage <command> [<arg1> [<arg2> [...<argN>]]]
+
+COMMANDS
+
+	help                        - general help
+	enable-system-repos         - enable system repositories
+	disable-system-repos        - disable system repositories
+	add-mirantis-repo           - add Mirantis repository
+	del-mirantis-repo           - remove Mirantis repository
+	add-mirantis-public-repo    - add public Mirantis repository
+	del-mirantis-public-repo    - remove public Mirantis repository
+	add-mirantis-internal-repo  - add private Mirantis repository
+	del-mirantis-internal-repo  - remove private Mirantis repository
+
+EOF
+}
 
 # Define additional functions
 function log {

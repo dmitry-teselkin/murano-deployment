@@ -1,0 +1,30 @@
+#!/bin/bash
+
+func=${1:-'help'}
+shift
+args="$@"
+
+
+# Import local configuration
+if [ -f '/etc/murano-deployment/obs-config.local' ]; then
+    source /etc/murano-deployment/obs-config.local
+fi
+# Import functions
+source ./functions.sh
+
+
+if [[ $func = 'help' ]]; then
+    func="${func}-${args}"
+    func=${func//-/_}
+    $func | less
+    exit
+fi
+
+func=${func//-/_}
+
+if [[ $(type -t $func) = 'function' ]]; then
+    $func "$@"
+else
+    echo "ERROR: No such function name '$func'!"
+fi
+
