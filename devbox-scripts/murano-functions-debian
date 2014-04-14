@@ -454,6 +454,9 @@ function install_murano() {
 
     enable_apt_proxy
 
+    add_mirantis_public_repo
+    add_mirantis_internal_repo stable testing
+
     enable_system_repos
 
     install_mysql
