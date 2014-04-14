@@ -56,7 +56,7 @@ function initialize_murano_db() {
     local db=${1:-'murano'}
     local now
 
-    murano-manage --config-file $MURANO_CONF_FILE db-sync
+    sudo -u $MURANO_USER murano-manage --config-file $MURANO_CONF_FILE db-sync
 
     for id in 1 2 3 4 5; do
         now=$(date --rfc-3339=ns)
