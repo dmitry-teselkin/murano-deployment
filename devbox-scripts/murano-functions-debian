@@ -457,7 +457,7 @@ function install_murano() {
     enable_system_repos
 
     install_mysql
-    #install_openstack_dashboard
+    install_openstack_dashboard
 
     disable_system_repos
 
