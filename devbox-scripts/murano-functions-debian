@@ -58,14 +58,14 @@ function initialize_murano_db() {
 
     sudo -u $MURANO_USER murano-manage --config-file $MURANO_CONF_FILE db-sync
 
-    for id in 1 2 3 4 5; do
-        now=$(date --rfc-3339=ns)
-        now=${now%%.*}
-        mysql -u root -p$MYSQL_PASSWORD <<EOF
-USE ${db};
-INSERT INTO category (id,name,created,updated) VALUES ('${id}','Category${id}','${now}','${now}');
-EOF
-    done
+#    for id in 1 2 3 4 5; do
+#        now=$(date --rfc-3339=ns)
+#        now=${now%%.*}
+#        mysql -u root -p$MYSQL_PASSWORD <<EOF
+#USE ${db};
+#INSERT INTO category (id,name,created,updated) VALUES ('${id}','Category${id}','${now}','${now}');
+#EOF
+#    done
 }
 #----------------
 
