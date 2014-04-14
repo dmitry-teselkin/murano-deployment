@@ -1,5 +1,30 @@
 #!/bin/bash
 
+function enable_apt_proxy() {
+    local proxy_conf=/etc/apt/apt.conf.d/01proxy-mirantis
+
+    if [[ -n "$APT_PROXY_HOST" ]]; then
+        cat << EOF > "$proxy_conf"
+Acquire::http::Proxy::fuel-repository.mirantis.com "DIRECT";
+Acquire::http::Proxy::osci-obs.vm.mirantis.net "DIRECT";
+Acquire::http::Proxy "http://$APT_PROXY_HOST:$APT_PROXY_PORT";
+EOF
+
+        apt-get update
+    fi
+}
+
+
+function disable_apt_proxy() {
+    local proxy_conf=/etc/apt/apt.conf.d/01proxy-mirantis
+
+    if [[ -f "$proxy_conf" ]]; then
+        rm -f "$proxy_conf"
+        apt-get update
+    fi
+}
+
+
 function add_mirantis_repo() {
 :
 }
@@ -426,6 +451,8 @@ function purge_murano_packages() {
 
 function install_murano() {
     trace_in ${FUNCNAME} "$@"
+
+    enable_apt_proxy
 
     enable_system_repos
 

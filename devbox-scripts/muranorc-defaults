@@ -9,6 +9,9 @@ FUEL_VERSION=${FUEL_VERSION:-'5.0'}
 FUEL_SUITE=${FUEL_SUITE:-'stable'}
 
 APT_LOCAL_REPO=${APT_LOCAL_REPO:-/opt/apt_local_repo}
+
+APT_PROXY_HOST=${APT_PROXY_HOST:-''}
+APT_PROXY_PORT=${APT_PROXY_PORT:-3142}
 # -------------------
 
 

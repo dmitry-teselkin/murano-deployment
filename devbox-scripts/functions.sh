@@ -14,6 +14,15 @@ fi
 source ./muranorc-defaults
 
 
+# Validate variables
+#-------------------
+die_if_not_set $LINENO HOST_IP "Not set"
+die_if_not_set $LINENO ADMIN_PASSWORD "Not set"
+die_if_not_set $LIENNO MYSQL_PASSWORD "Not set"
+die_if_not_set $LINENO RABBIT_VHOST "Not set"
+die_if_not_set $LINENO APT_PROXY_HOST "Not set"
+#-------------------
+
 GetOSVersion
 
 # Import distro-based scripts for Murano
