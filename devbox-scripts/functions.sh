@@ -16,11 +16,14 @@ source ./muranorc-defaults
 
 # Validate variables
 #-------------------
-die_if_not_set $LINENO HOST_IP "Not set"
-die_if_not_set $LINENO ADMIN_PASSWORD "Not set"
-die_if_not_set $LIENNO MYSQL_PASSWORD "Not set"
-die_if_not_set $LINENO RABBIT_VHOST "Not set"
-die_if_not_set $LINENO APT_PROXY_HOST "Not set"
+function check_vars() {
+    while [[ -n "$1" ]]; do
+        die_if_not_set $LINENO $1 "Not set: $1"
+        shift
+    done
+}
+
+check_vars HOST_IP ADMIN_PASSWORD MYSQL_PASSWORD RABBIT_VHOST APT_PROXY_HOST
 #-------------------
 
 GetOSVersion
