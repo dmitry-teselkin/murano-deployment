@@ -48,6 +48,16 @@ MURANO_CONF_FILE=$MURANO_CONF_DIR/murano.conf
 #-----------------------------
 
 
+# Other options
+#--------------
+MURANO_DEBUG=${MURANO_DEBUG:-True}
+MURANO_VERBOSE=${MURANO_VERBOSE:-True}
+
+MURANO_LOG_DIR=${MURANO_LOG_DIR:-/var/log/murano}
+MURANO_CACHE_DIR=${MURANO_CACHE_DIR:-/var/cache/murano}
+#--------------
+
+
 # Endpoints
 #----------
 AUTH_HOST=$HOST_IP
@@ -63,20 +73,6 @@ MURANO_API_SIGNING_DIR=$MURANO_CACHE_DIR/keystone-signing-muranoapi
 #----------
 
 
-# Other options
-#--------------
-MURANO_DEBUG=${MURANO_DEBUG:-True}
-MURANO_VERBOSE=${MURANO_VERBOSE:-True}
-
-MURANO_LOG_DIR=${MURANO_LOG_DIR:-/var/log/murano}
-
-MURANO_CACHE_DIR=${MURANO_CACHE_DIR:-/var/cache/murano}
-
-MURANO_DASHBOARD_CACHE=${MURANO_DASHBOARD_CACHE:-$MURANO_CACHE_DIR/muranodashboard-cache}
-MURANO_DASHBOARD_DB_DIR=${MURANO_DASHBOARD_DB_DIR:-'/var/lib/openstack-dashboard'}
-#--------------
-
-
 # Dashboard settings
 #-------------------
 HORIZON_USER=${HORIZON_USER:-horizon}
@@ -89,4 +85,7 @@ HORIZON_LOCAL_CONFIG=${HORIZON_LOCAL_CONFIG:-/etc/openstack-dashboard/local_sett
 # Set up default directories
 MURANO_DASHBOARD_DIR=$DEST/murano-dashboard
 MURANO_PYTHONCLIENT_DIR=$DEST/python-muranoclient
+
+MURANO_DASHBOARD_CACHE=${MURANO_DASHBOARD_CACHE:-$MURANO_CACHE_DIR/muranodashboard-cache}
+MURANO_DASHBOARD_DB_DIR=${MURANO_DASHBOARD_DB_DIR:-'/var/lib/openstack-dashboard'}
 #-------------------
