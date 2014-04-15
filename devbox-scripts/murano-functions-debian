@@ -449,8 +449,10 @@ function purge_murano_packages() {
 }
 
 
-function install_murano() {
+function install_murano_prereqs() {
     trace_in ${FUNCNAME} "$@"
+
+    disable_system_repos
 
     enable_apt_proxy
 
@@ -464,6 +466,13 @@ function install_murano() {
 
     disable_system_repos
 
+    trace_out
+}
+
+
+function install_murano_apps() {
+    trace_in ${FUNCNAME} "$@"
+
     install_murano_api
     configure_murano_api
 
@@ -472,6 +481,18 @@ function install_murano() {
     initialize_murano_db
 
     install_murano_dashboard
+    configure_murano_dashboard
+
+    trace_out
+}
+
+
+function install_murano() {
+    trace_in ${FUNCNAME} "$@"
+
+    install_murano_prereqs
+
+    install_murano_apps
 
     trace_out
 }
