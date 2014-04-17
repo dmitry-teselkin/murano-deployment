@@ -23,7 +23,7 @@ function check_vars() {
     done
 }
 
-check_vars HOST_IP ADMIN_PASSWORD MYSQL_PASSWORD RABBIT_VHOST APT_PROXY_HOST
+#check_vars HOST_IP ADMIN_PASSWORD MYSQL_PASSWORD RABBIT_VHOST APT_PROXY_HOST
 #-------------------
 
 GetOSVersion

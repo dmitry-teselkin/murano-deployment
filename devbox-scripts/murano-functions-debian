@@ -1,17 +1,21 @@
 #!/bin/bash
 
 function enable_apt_proxy() {
+    local apt_proxy_host=${1:-$APT_PROXY_HOST}
+    local apt_proxy_port=${2:-$APT_PROXY_PORT}
     local proxy_conf=/etc/apt/apt.conf.d/01proxy-mirantis
 
-    if [[ -n "$APT_PROXY_HOST" ]]; then
+    check_vars apt_proxy_host apt_proxy_port
+
+#    if [[ -n "$APT_PROXY_HOST" ]]; then
         cat << EOF > "$proxy_conf"
 Acquire::http::Proxy::fuel-repository.mirantis.com "DIRECT";
 Acquire::http::Proxy::osci-obs.vm.mirantis.net "DIRECT";
-Acquire::http::Proxy "http://$APT_PROXY_HOST:$APT_PROXY_PORT";
+Acquire::http::Proxy "http://${apt_proxy_host}:${apt_proxy_port}";
 EOF
 
         apt-get update
-    fi
+#    fi
 }
 
 
