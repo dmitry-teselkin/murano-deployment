@@ -1,5 +1,9 @@
+# OpenStack host IP address
 HOST_IP=
+# OpenStack 'admin' user's password
 ADMIN_PASSWORD=
+# Password for MySQL's 'root' user (will be used to install MySQL)
 MYSQL_PASSWORD=
+# RabbitMQ virtual host on OpenStack node
 RABBIT_VHOST=
-APT_PROXY_HOST=
+
