@@ -548,6 +548,9 @@ function install_murano() {
 
     install_murano_apps
 
+    service openstack-murano-api start
+    service openstack-murano-engine start
+
     trace_out
 }
 
