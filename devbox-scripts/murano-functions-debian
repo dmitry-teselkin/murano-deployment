@@ -44,6 +44,11 @@ function apt_install_anyway() {
 }
 
 
+function apt_install_quiet() {
+    apt-get install --yes --force-yes "$@"
+}
+
+
 # MySQL functions
 #----------------
 function install_mysql() {
@@ -501,12 +506,15 @@ function install_murano_prereqs() {
     #enable_apt_proxy
 
     add_mirantis_public_repo
-    add_mirantis_internal_repo stable testing
+    #add_mirantis_internal_repo stable testing
 
     enable_system_repos
 
     install_mysql
     install_openstack_dashboard
+
+    # TODO(dteselkin): remove as soon as package will be added to dependencies
+    apt_install_quiet python-psutil
 
     disable_system_repos
 
