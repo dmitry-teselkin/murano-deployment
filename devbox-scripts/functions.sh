@@ -52,23 +52,23 @@ function help_ {
     cat << EOF
 
 SUMMARY
-	devbox-manage - a script which provides several functions to help you manage Murano devbox installation.
+    devbox-manage - a script which provides several functions to help you manage Murano devbox installation.
 
 USAGE
 
-	devbox-manage <command> [<arg1> [<arg2> [...<argN>]]]
+    devbox-manage <command> [<arg1> [<arg2> [...<argN>]]]
 
 COMMANDS
 
-	help                        - general help
-	enable-system-repos         - enable system repositories
-	disable-system-repos        - disable system repositories
-	add-mirantis-repo           - add Mirantis repository
-	del-mirantis-repo           - remove Mirantis repository
-	add-mirantis-public-repo    - add public Mirantis repository
-	del-mirantis-public-repo    - remove public Mirantis repository
-	add-mirantis-internal-repo  - add private Mirantis repository
-	del-mirantis-internal-repo  - remove private Mirantis repository
+    help                        - general help
+    enable-system-repos         - enable system repositories
+    disable-system-repos        - disable system repositories
+    add-mirantis-repo           - add Mirantis repository
+    del-mirantis-repo           - remove Mirantis repository
+    add-mirantis-public-repo    - add public Mirantis repository
+    del-mirantis-public-repo    - remove public Mirantis repository
+    add-mirantis-internal-repo  - add private Mirantis repository
+    del-mirantis-internal-repo  - remove private Mirantis repository
 
 EOF
 }

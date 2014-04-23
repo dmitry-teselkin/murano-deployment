@@ -7,15 +7,13 @@ function enable_apt_proxy() {
 
     check_vars apt_proxy_host apt_proxy_port
 
-#    if [[ -n "$APT_PROXY_HOST" ]]; then
-        cat << EOF > "$proxy_conf"
+    cat << EOF > "$proxy_conf"
 Acquire::http::Proxy::fuel-repository.mirantis.com "DIRECT";
 Acquire::http::Proxy::osci-obs.vm.mirantis.net "DIRECT";
 Acquire::http::Proxy "http://${apt_proxy_host}:${apt_proxy_port}";
 EOF
 
-        apt-get update
-#    fi
+    apt-get update
 }
 
 
@@ -86,15 +84,6 @@ function initialize_murano_db() {
     local now
 
     sudo -u $MURANO_USER murano-manage --config-file $MURANO_CONF_FILE db-sync
-
-#    for id in 1 2 3 4 5; do
-#        now=$(date --rfc-3339=ns)
-#        now=${now%%.*}
-#        mysql -u root -p$MYSQL_PASSWORD <<EOF
-#USE ${db};
-#INSERT INTO category (id,name,created,updated) VALUES ('${id}','Category${id}','${now}','${now}');
-#EOF
-#    done
 }
 #----------------
 
@@ -206,7 +195,7 @@ Package: *
 Pin: origin ""
 Pin-Priority: 550
 EOF
-fi
+            fi
 
             # Check if local repo folder exists
             if [[ ! -d "${APT_LOCAL_REPO}" ]]; then
@@ -244,6 +233,50 @@ function drop_mirantis_internal_repos() {
     rm -rf ${APT_LOCAL_REPO}
 
     echo_ "Updating repository ..."
+    apt-get -q update
+
+    trace_out
+}
+
+
+function add_local_repo() {
+    trace_in ${FUNCNAME} "$@"
+
+    local path=$1
+    local apt_list_file="/etc/apt/sources.list.d/local_repo.list"
+
+    if [[ -z "${path}" ]]; then
+        die "Empty path provided."
+    fi
+
+    # Check if pinning preferences for local repo is set
+    if [[ ! -f "/etc/apt/preferences.d/local_repo.pref" ]]; then
+        cat << EOF > "/etc/apt/preferences.d/local_repo.pref"
+Package: *
+Pin: origin ""
+Pin-Priority: 550
+EOF
+    fi
+
+    # Check if local repo folder exists
+    if [[ ! -d "${path}" ]]; then
+        die "Path not found '${path}'"
+    fi
+
+    echo "deb file:${path} ./" > "${apt_list_file}"
+
+    apt-get -q update
+
+    trace_out
+}
+
+
+function drop_local_repo() {
+    trace_in ${FUNCNAME} "$@"
+
+    local apt_list_file="/etc/apt/sources.list.d/local_repo.list"
+
+    rm -f "${apt_list_file}"
     apt-get -q update
 
     trace_out
@@ -326,11 +359,18 @@ function configure_murano_api() {
     iniset "$MURANO_CONF_FILE" 'DEFAULT' 'log_file' "$MURANO_LOG_DIR/murano-api.log"
 
     # RabbitMQ settings
+    #   murano-api config
     iniset "$MURANO_CONF_FILE" 'DEFAULT' 'rabbit_host' "$RABBIT_HOST"
     iniset "$MURANO_CONF_FILE" 'DEFAULT' 'rabbit_port' "$RABBIT_PORT"
     iniset "$MURANO_CONF_FILE" 'DEFAULT' 'rabbit_userid' "$RABBIT_USERID"
     iniset "$MURANO_CONF_FILE" 'DEFAULT' 'rabbit_password' "$RABBIT_PASSWORD"
     iniset "$MURANO_CONF_FILE" 'DEFAULT' 'rabbit_virtual_host' "$RABBIT_VHOST"
+    #   murano-engine config
+    iniset "$MURANO_CONF_FILE" 'rabbitmq' 'host' "$RABBIT_HOST"
+    iniset "$MURANO_CONF_FILE" 'rabbitmq' 'port' "$RABBIT_PORT"
+    iniset "$MURANO_CONF_FILE" 'rabbitmq' 'login' "$RABBIT_USERID"
+    iniset "$MURANO_CONF_FILE" 'rabbitmq' 'password' "$RABBIT_PASSWORD"
+    iniset "$MURANO_CONF_FILE" 'rabbitmq' 'virtual_host' "$RABBIT_VHOST"
 
     # Database settings
     iniset "$MURANO_CONF_FILE" 'database' 'connection' "$(database_connection_url murano)"
@@ -458,7 +498,7 @@ function install_murano_prereqs() {
 
     disable_system_repos
 
-    enable_apt_proxy
+    #enable_apt_proxy
 
     add_mirantis_public_repo
     add_mirantis_internal_repo stable testing
@@ -493,6 +533,8 @@ function install_murano_apps() {
 
 function install_murano() {
     trace_in ${FUNCNAME} "$@"
+
+    check_vars HOST_IP ADMIN_PASSWORD MYSQL_PASSWORD RABBIT_VHOST
 
     install_murano_prereqs
 
