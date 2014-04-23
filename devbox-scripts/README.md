@@ -45,6 +45,6 @@
 	./devbox-manage install-murano
 	```
 
-10. Open web browser and navigate to http://<your_vm_ip>/horizon Login with OpenStack credentials that are valid on the OpenStack host you've specified in muranorc.
+10. Open web browser and navigate to _http://**YOUR-VM-IP**/horizon_. Login with OpenStack credentials that are valid on the OpenStack host you've specified in muranorc.
 
 11. Enjoy ;)
