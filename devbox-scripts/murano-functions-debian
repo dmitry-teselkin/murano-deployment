@@ -513,7 +513,8 @@ function install_murano_prereqs() {
     #enable_apt_proxy
 
     add_mirantis_public_repo
-    #add_mirantis_internal_repo stable testing
+    add_mirantis_internal_repo $MURANO_CI_REPOS
+    add_mirantis_internal_repo $MURANO_CI_BUILDS
 
     enable_system_repos
 

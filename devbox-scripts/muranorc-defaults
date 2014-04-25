@@ -18,6 +18,9 @@ APT_PROXY_PORT=${APT_PROXY_PORT:-3142}
 BUILD_REQUEST_IDS=${BUILD_REQUEST_IDS:-''}
 MURANO_PACKAGES_DEBIAN='murano-api murano-dashboard python-muranoclient'
 
+MURANO_CI_REPOS=${MURANO_CI_REPOS:-'stable testing'}
+MURANO_CI_BUILDS=${MURANO_CI_BUILDS:-''}
+
 LOG_FILE=${LOG_FILE:-'/tmp/murano-obs-install.log'}
 
 SCREEN_LOGDIR=${SCREEN_LOGDIR:-/tmp}

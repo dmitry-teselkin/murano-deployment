@@ -1,9 +1,12 @@
 # OpenStack host IP address
-HOST_IP=
+HOST_IP=                                 # <-- EDIT THIS
 # OpenStack 'admin' user's password
-ADMIN_PASSWORD=
+ADMIN_PASSWORD=                          # <-- EDIT THIS
 # Password for MySQL's 'root' user (will be used to install MySQL)
-MYSQL_PASSWORD=
+MYSQL_PASSWORD=                          # <-- EDIT THIS
 # RabbitMQ virtual host on OpenStack node
-RABBIT_VHOST=
+RABBIT_VHOST=                            # <-- EDIT THIS
 
+# Disable Mirantis CI repos (Do NOT edit!)
+MURANO_CI_REPOS=''
+MURANO_CI_BUILDS=''
