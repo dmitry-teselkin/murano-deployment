@@ -393,7 +393,6 @@ function configure_murano_api() {
     iniset "$MURANO_CONF_FILE" 'keystone_authtoken' 'admin_user' "$ADMIN_USERNAME"
     iniset "$MURANO_CONF_FILE" 'keystone_authtoken' 'admin_password' "$ADMIN_PASSWORD"
     iniset "$MURANO_CONF_FILE" 'keystone_authtoken' 'signing_dir' "$MURANO_API_SIGNING_DIR"
-    #-------------------------
 
     trace_out
 }
@@ -401,6 +400,37 @@ function configure_murano_api() {
 
 function cleanup_murano_api() {
     trace_in ${FUNCNAME} "$@"
+    trace_out
+}
+
+
+function initialize_murano_api() {
+    trace_in ${FUNCNAME} "$@"
+
+    sudo -u $MURANO_USER murano-manage --config-file $MURANO_CONF_FILE db-sync
+
+    murano_manage_import_package 'io.murano'
+    murano_manage_import_package 'io.murano.lib.networking.Neutron'
+
+    trace_out
+}
+
+
+function murano_manage_import_package() {
+    trace_in ${FUNCNAME} "$@"
+
+    local package_name=$1
+    local package_category=${2:-''}
+    local package_path="$MURANO_CACHE_DIR/meta/${package_name}"
+
+    if [[ -d "${package_path}" ]]; then
+        if [[ -z "${package_category}" ]]; then
+            sudo -u $MURANO_USER murano-manage --config-file $MURANO_CONFIG_FILE import-package "${package_path}"
+        else
+            sudo -u $MURANO_USER murano-manage --cnofig-file $MURANO_CONFIG_FILE import-package -c "${category_name}" "${package_path}"
+        fi
+    fi
+
     trace_out
 }
 #---------------------
@@ -522,9 +552,28 @@ function install_murano_prereqs() {
     install_openstack_dashboard
 
     # TODO(dteselkin): remove as soon as package will be added to dependencies
-    apt_install_quiet python-psutil
+    #apt_install_quiet python-psutil
 
     disable_system_repos
+
+    trace_out
+}
+
+
+function install_murano_components() {
+    trace_in ${FUNCNAME} "$@"
+
+    drop_murano_db
+    create_murano_db
+
+    install_murano_api
+    configure_murano_api
+    initialize_murano_api
+
+    install_murano_dashboard
+    configure_murano_dashboard
+
+    install_murano_apps
 
     trace_out
 }
@@ -533,15 +582,9 @@ function install_murano_prereqs() {
 function install_murano_apps() {
     trace_in ${FUNCNAME} "$@"
 
-    install_murano_api
-    configure_murano_api
+    apt_install_anyway murano-apps
 
-    drop_murano_db
-    create_murano_db
-    initialize_murano_db
-
-    install_murano_dashboard
-    configure_murano_dashboard
+    murano_manage_import_package 'io.murano.apps.PostgreSql' 'Databases'
 
     trace_out
 }
@@ -554,7 +597,7 @@ function install_murano() {
 
     install_murano_prereqs
 
-    install_murano_apps
+    install_murano_components
 
     service openstack-murano-api start
     service openstack-murano-engine start
