@@ -394,6 +394,8 @@ function configure_murano_api() {
     iniset "$MURANO_CONF_FILE" 'keystone_authtoken' 'admin_password' "$ADMIN_PASSWORD"
     iniset "$MURANO_CONF_FILE" 'keystone_authtoken' 'signing_dir' "$MURANO_API_SIGNING_DIR"
 
+    iniset "$MURANO_CONF_FILE" 'keystone' 'auth_url' "http://$AUTH_HOST:5000/v2.0"
+
     trace_out
 }
 
@@ -410,7 +412,7 @@ function initialize_murano_api() {
     sudo -u $MURANO_USER murano-manage --config-file $MURANO_CONF_FILE db-sync
 
     murano_manage_import_package 'io.murano'
-    murano_manage_import_package 'io.murano.lib.networking.Neutron'
+    murano_manage_import_package 'io.murano.lib.networks.Neutron'
 
     trace_out
 }
