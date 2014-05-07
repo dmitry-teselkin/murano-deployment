@@ -427,7 +427,7 @@ function murano_manage_import_package() {
         if [[ -z "${package_category}" ]]; then
             sudo -u $MURANO_USER murano-manage --config-file $MURANO_CONFIG_FILE import-package "${package_path}"
         else
-            sudo -u $MURANO_USER murano-manage --cnofig-file $MURANO_CONFIG_FILE import-package -c "${category_name}" "${package_path}"
+            sudo -u $MURANO_USER murano-manage --cnofig-file $MURANO_CONFIG_FILE import-package -c "${package_category}" "${package_path}"
         fi
     fi
 
